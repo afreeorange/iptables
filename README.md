@@ -5,7 +5,7 @@ A simple IPTables-based firewall I used in a past life for my servers.
 ## Setup
 
 1. Run `setup` first. 
-2. Then edit `50-firewall-input`. You'll find rules for many common services in this file.
+2. Then edit `40-firewall-input`. You'll find rules for many common services in this file.
 3. You can edit the correspondingly named output, forward, & nat scripts if you'd like.
 4. Finally, run `firewall`. 
 
@@ -27,15 +27,13 @@ For example, to open up ports 80 and 443 to a trusted groups, I'd edit `50-firew
 
 To add custom rules, do not edit the ones you check out from the repo. Your custom rules/definitions file should be named
 
- > **mn**-firewall-_foobar_
+ > **mn**-firewall-**foobar**
 
 where `m` and `n` are numbers, and "foobar" is anything you want.
 
-For example, if you needed to add a new input rule specific to that server, create a file called `55-firewall-input-custom` and then run
+For example, if you needed to add a new input rule specific to that server, create a file called `55-firewall-input-custom` and then run `firewall`
 
-> ./firewall
-
-This system allows you to keep your custom rules and continue to get the latest versions of the firewall script(s) from the repository.
+This system allows you to keep your custom rules and continue to get the latest versions of the firewall from this repository.
 
 ## License
 
