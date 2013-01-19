@@ -1,0 +1,229 @@
+#!/bin/bash
+
+# See "setup" for how these are used
+
+INPUTRULES='#------ INPUT Chain Rules ------
+
+cyanheader "+ Setting up INPUT chain."; yellowheader "  Allowing incoming:";
+
+echo -e "  - SSH"
+$IPTABLES -A INPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
+
+# + You can open up ports to certain IPs or blocks. Here are some common rules you
+#   can uncomment and activate (run firewall when you are done.)
+#
+# + Refer to 10-firewall-definitions for common IP ranges when writing your
+#   own rules for ports not mentioned here.
+# 
+# + To use a group of IPs, you will need to write a small bash loop. For example,
+#   to open up ports 80 and 443 to campus,
+#  
+#   echo -e "  - HTTP/S (Campus only)"
+#   for CAMPUS_IP in $GROUP_CAMPUS; do
+#           $IPTABLES -A INPUT -p tcp -s $CAMPUS_IP -m multiport --dport 80,443 -m state --state NEW -j ACCEPT
+#   done
+# 
+# + It is always a good idea to change the echo statement to show the scope (e.g. "22-net only", etc)
+
+#echo -e "  - HTTP/S"
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 80,443 -m state --state NEW -j ACCEPT
+
+#echo -e "  - MySQL"
+#$IPTABLES -A INPUT -p tcp --dport 3306 -m state --state NEW -j ACCEPT
+
+## NFS Configuration: /etc/sysconfig/nfs must be set up before this
+#echo -e "  - NFS (RHEL defaults)"
+#echo -e "    - Setting port 2049 for NFS, 111 for portmapper"
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 2049,111 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp -m multiport --dport 2049,111 -m state --state NEW -j ACCEPT
+#echo -e "    - Setting MOUNTD and STATD ports"
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 892,662 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp -m multiport --dport 892,662 -m state --state NEW -j ACCEPT
+#echo -e "    - Setting LOCKD ports"
+#$IPTABLES -A INPUT -p tcp --dport 32803 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 32769 -m state --state NEW -j ACCEPT
+
+#echo -e "  - PgSQL"
+#$IPTABLES -A INPUT -p tcp --dport 5432 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 5432 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p tcp --dport 5433 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 5433 -m state --state NEW -j ACCEPT
+
+#echo -e "  - VNC Server" 
+# Replace the "n" below with the display number
+# You may have to replace TCP with UDP depending on your setup
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 580n,590n,600n -m state --state NEW -j ACCEPT
+
+#echo -e "  - Red Hat Directory Server ports"
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 389,636,9830 -m state --state NEW -j ACCEPT
+
+#echo -e "  - 3ware Web Management Interface (Port 888)"
+#$IPTABLES -A INPUT -p tcp -m tcp --dport 888 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Samba"
+#$IPTABLES -A INPUT -p udp -m multiport --dport 137,138 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 139,445 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Kerberos"
+#$IPTABLES -A INPUT -p udp -m udp --dport 88 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Active & Passive FTP Command Port (21)"
+#$IPTABLES -A INPUT -p tcp --dport 21 -m state --state NEW -j ACCEPT
+
+## Change these based on pasv_min_port:pasv_max_port as defined by your FTP server
+#echo -e "  - Passive FTP Ports (12000:13000)"
+#$IPTABLES -A INPUT -p tcp --dport 12000:13000 -m state --state NEW -j ACCEPT
+
+## Note: These will _not_ work without the appropriate forwarding and masquerading rules
+##       See files {40,50,60,70}-firewall-* to set up VPNs properly
+## 	 You may not nee _both_ UDP and TCP; check server.conf for OpenVPN
+#echo -e "  - OpenVPN (tun+) (Port 1194)"
+#$IPTABLES -A INPUT -i tun+ -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 1194 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p tcp --dport 1194 -m state --state NEW -j ACCEPT
+
+#echo -e "  - PPTP (ppp+) (Port 1723) (GRE Protocol 47)"
+#$IPTABLES -A INPUT -i ppp+ -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p tcp --dport 1723 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p 47 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Red Hat Network Server (XMPP-Client, 4545)"
+#$IPTABLES -A INPUT  -p tcp --dport 5222 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT  -p udp --dport 5222 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p tcp --sport 5222 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p udp --sport 5222 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Zenoss (Port 9066)"
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 9066 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Puppet Server"
+#$IPTABLES -A INPUT -p tcp -m multiport --dport 8140 -m state --state NEW -j ACCEPT
+
+#echo -e "  - SMTP"
+#$IPTABLES -A INPUT -p tcp --dport 25 -m state --state NEW -j ACCEPT
+
+#echo -e "  - SMTP over SSL"
+#$IPTABLES -A INPUT -p tcp --dport 465 -m state --state NEW -j ACCEPT
+
+#echo -e "  - SMTP over StartTLS"
+#$IPTABLES -A INPUT -p tcp --dport 587 -m state --state NEW -j ACCEPT
+
+#echo -e "  - IMAP"
+#$IPTABLES -A INPUT -p tcp --dport 143 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 143 -m state --state NEW -j ACCEPT
+
+#echo -e "  - IMAP over SSL"
+#$IPTABLES -A INPUT -p tcp --dport 993 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 993 -m state --state NEW -j ACCEPT
+
+#echo -e "  - POP3"
+#$IPTABLES -A INPUT -p tcp --dport 110 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 110 -m state --state NEW -j ACCEPT
+
+#echo -e "  - POP3 over SSL"
+#$IPTABLES -A INPUT -p tcp --dport 995 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 995 -m state --state NEW -j ACCEPT
+
+#echo -e "  - Portmapper"
+#$IPTABLES -A INPUT -p tcp --dport 111 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 111 -m state --state NEW -j ACCEPT
+
+#echo -e "  - NIS (ypserv on 854) (fypxfrd on 855)"
+#$IPTABLES -A INPUT -p tcp --dport 854 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 854 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p tcp --dport 855 -m state --state NEW -j ACCEPT
+#$IPTABLES -A INPUT -p udp --dport 855 -m state --state NEW -j ACCEPT
+
+# Uncomment to set up a PPTP server
+#echo -e "  - PPTP (1723) (GRE Protocol 47)"
+#$IPTABLES -A OUTPUT  -p tcp --sport 1723 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+#$IPTABLES -A OUTPUT  -p 47 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+'
+
+NATRULES='#------ NAT Rules ------
+
+## Uncomment to allow IP masquerading (important for VPNs like OpenVPN and PPTP)
+#cyanheader "+ Setting up POSTROUTING chain"; yellowheader "  Masquerading RFC1918 Subnets";
+#for PRIVATE_SUBNET in $GROUP_RFC1918; do
+#        $IPTABLES -A POSTROUTING -s $PRIVATE_SUBNET -t nat -j MASQUERADE
+#done
+'
+
+FORWARDRULES='#------ FORWARD Chain Rules ------
+
+## Uncomment to set up forwarding for VPN
+#cyanheader "+ Setting up FORWARD chain."; yellowheader "  Allowing:";
+#
+#echo -e "  - ppp+ Passthrough (PPTP)"
+#$IPTABLES -A FORWARD -i ppp+ -m state --state NEW -j ACCEPT
+#
+#echo -e "  - tun+ Passthrough (OpenVPN)"
+#$IPTABLES -A FORWARD -i tun+ -m state --state NEW -j ACCEPT
+'
+
+OUTPUTRULES='# ------------- OUTPUT CHAIN ---------------
+
+cyanheader   "+ Setting up OUTPUT chain."; 
+yellowheader "  Allowing all outgoing traffic.";
+echo -e      "  - See 40-firewall-output to modify this behaviour if needed.";
+
+$IPTABLES -A OUTPUT -m state --state NEW -j ACCEPT
+
+#echo -e "  - Portmapper"
+#$IPTABLES -A OUTPUT -p udp --dport 111 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p tcp --dport 111 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Active FTP"
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 20,21 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Passive FTP"
+#$IPTABLES -A OUTPUT -p tcp --sport 1024: -m state --state NEW -j ACCEPT
+#
+#echo -e "  - SSH"
+#$IPTABLES -A OUTPUT -p tcp --dport 22 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Sendmail"
+#$IPTABLES -A OUTPUT -p tcp --dport 25 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - HTTP/S"
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 80,443 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Samba and NetBIOS"
+#$IPTABLES -A OUTPUT -p udp -m multiport --dport 137,138 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 139,445 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - LDAP/S"
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 389,636 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - CVS"
+#$IPTABLES -A OUTPUT -p tcp --dport 2401 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p udp --dport 2401 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - NFS"
+#$IPTABLES -A OUTPUT -p udp --dport 2049 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p tcp --dport 2049 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Active Directory lookups"
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 3268,3269 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Subversion"
+#$IPTABLES -A OUTPUT -p tcp --dport 3690 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -p udp --dport 3690 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - MySQL (3306)"
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 3306 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - whois lookups"
+#$IPTABLES -A OUTPUT -p tcp -m multiport --dport 43,4321 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Allowing DNS lookups (world)"
+#$IPTABLES -A OUTPUT -p udp --dport 53 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - Allowing BOOTP (CSS) only"
+#$IPTABLES -A OUTPUT -s $IP_CSS_BOOTP -p tcp --dport 67 -m state --state NEW -j ACCEPT
+#$IPTABLES -A OUTPUT -s $IP_CSS_BOOTP -p udp --dport 67 -m state --state NEW -j ACCEPT
+#
+#echo -e "  - ICMP"
+#$IPTABLES -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
+'
+

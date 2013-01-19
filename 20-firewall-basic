@@ -1,0 +1,58 @@
+# ---------- INITIAL SETUP ---------
+
+cyanheader "+ Starting..."
+
+echo -e "  - Flushing all rules in all tables"
+$IPTABLES -F
+$IPTABLES -X
+$IPTABLES -t nat -F
+$IPTABLES -t nat -X
+$IPTABLES -t mangle -F
+$IPTABLES -t mangle -X
+
+echo -e "  - Setting default policy (drop everything)"
+$IPTABLES -P INPUT   DROP
+$IPTABLES -P FORWARD DROP
+$IPTABLES -P OUTPUT  DROP
+
+echo -e "  - Dropping packets in invalid state"
+$IPTABLES -A INPUT   -m state --state INVALID -j DROP
+$IPTABLES -A OUTPUT  -m state --state INVALID -j DROP
+$IPTABLES -A FORWARD -m state --state INVALID -j DROP
+
+echo -e "  - Loading connection tracking modules (not iptables_nat, ip_nat_ftp)"
+$MODPROBE ip_conntrack
+$MODPROBE ip_conntrack_ftp
+
+# ----------- BASIC RULES ---------
+
+cyanheader "+ Poking holes:"; echo -e "  - Setting up basic state-tracking policy"
+$IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT
+$IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+echo -e "  - Allowing all traffic on loopback"
+$IPTABLES -A INPUT  -i lo -j ACCEPT
+$IPTABLES -A OUTPUT -o lo -j ACCEPT
+
+echo -e "  - Allowing all traffic on RFC1918 subnets" 
+for PRIVATE_SUBNET in $GROUP_RFC1918; do
+    $IPTABLES -A INPUT   -s $PRIVATE_SUBNET -j ACCEPT
+    $IPTABLES -A FORWARD -s $PRIVATE_SUBNET -j ACCEPT
+    $IPTABLES -A OUTPUT  -s $PRIVATE_SUBNET -j ACCEPT
+done
+
+# ----------- ICMP Types ---------
+# Apropos connection states, there are only 4 ICMP type groups which are NEW or ESTABLISHED
+#   1. Echo Request          (type  8) and Reply (type  0) (ping and pong)
+#   2. Timestamp Request     (type 13) and Reply (type 14)
+#   3. Information Request   (type 15) and Reply (type 16)
+#   4. Address Mask Request  (type 17) and Reply (type 18)
+#
+# The rest have to be RELATED to pre-established connections
+# This is the rationale behind the next rule
+# NOTE: The INPUT chain rule (for EST and REL connections) is already taken care of (see above)
+
+echo -e "  - Allowing ICMP requests (out and in)"
+$IPTABLES -A INPUT  -p icmp -m state --state NEW -j ACCEPT
+$IPTABLES -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT

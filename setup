@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# IPTables Firewall Setup Script
+
+# Nikhil Anand <nikhil@mantralay.org>
+# Wed Sep 21 13:09:39 CDT 2011
+
+function magentaheader() { echo -e "\E[35m$1"; tput sgr0; }
+function greenheader()   { echo -e "\E[32m$1"; tput sgr0; }
+function redheader()     { echo -e "\E[31m$1"; tput sgr0; }
+
+function show_warning() {
+redheader "\nError: You've already configured this firewall\n"
+cat <<WARNING
+Running "setup" again would flush your custom rules, which is why I'm 
+halting this script. You most likely have it here because you ran "git pull". 
+You can delete it fearlessly. 
+
+If you know what you're doing, remove .firewall-configured in this folder to 
+set things up again.
+
+WARNING
+}
+
+# If script was initialized, show warning
+if [ -e ".firewall-configured" ]; then
+
+    show_warning
+
+# If not, set up the required files
+else
+
+    magentaheader "Firewall Setup"
+
+    echo -e "+ Loading default rulesets"      && source ./rules
+
+    echo -e "+ Creating 30-firewall-output"   && echo "$OUTPUTRULES"  > ./30-firewall-output
+    echo -e "+ Creating 40-firewall-input"    && echo "$INPUTRULES"   > ./40-firewall-input
+    echo -e "+ Creating 50-firewall-forward"  && echo "$FORWARDRULES" > ./50-firewall-forward
+    echo -e "+ Creating 60-firewall-nat"      && echo "$NATRULES"     > ./60-firewall-nat
+
+    echo -e "+ Modifying ownership and permissions"
+    chmod 700 ./*
+    chown 0:0 ./*
+    echo -e "\n  Done.\n"
+
+    magentaheader "Cleaning up..."
+    touch ./.firewall-configured
+    rm -f `basename $0`
+    rm -f ./rules
+    echo -e "Fin.\n"
+
+    magentaheader "Next steps"
+    echo -e "+ Define some IPs and blocks in 10-firewall-definitions"
+    echo -e "+ Common server roles are in 40-firewall-input"
+    echo -e "+ Once finished, you can run \"firewall\"\n"
+
+fi

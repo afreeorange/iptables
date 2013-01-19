@@ -1,0 +1,118 @@
+#!/bin/bash
+
+# Nikhil Anand <nikhil@mantralay.org>
+# Mon Oct 31 10:58:06 CDT 2011
+# (c) Copyright, 2011-2020
+
+# Colorized headers; unnecessary, but makes me happy
+function cyanheader()   { echo -e "\E[36m$1"; tput sgr0; }
+function greenheader()  { echo -e "\E[32m$1"; tput sgr0; }
+function yellowheader() { echo -e "\E[33m$1"; tput sgr0; }
+function redheader()    { echo -e "\E[31m$1"; tput sgr0; }
+
+# Set up load and save scripts for Ubuntu
+function ubuntu_iptables_scripts() {
+LOAD_SCRIPT="#!/bin/sh
+iptables-restore < /etc/network/iptables.rules
+exit 0"
+    echo "$LOAD_SCRIPT" > /etc/network/if-pre-up.d/iptablesload
+    chmod 700 /etc/network/if-pre-up.d/iptablesload
+
+SAVE_SCRIPT="#!/bin/sh
+iptables-save -c > /etc/network/iptables.rules
+"
+    echo "$SAVE_SCRIPT" > /etc/network/if-post-down.d/iptablessave 
+    chmod 700 /etc/network/if-post-down.d/iptablessave
+}
+
+# Locate the necessary binaries
+IPTABLES=$(which iptables)
+if [ $? != 0 ]; then
+    redheader '! iptables command not found in PATH. Using /sbin/iptables'
+    IPTABLES=/sbin/iptables
+fi
+SERVICE=$(which service)
+if [ $? != 0 ]; then
+    redheader '! service command not found in PATH. Using /sbin/service'
+    SERVICE=/sbin/service
+fi
+MODPROBE=$(which modprobe)
+if [ $? != 0 ]; then
+    redheader '! modprobe command not found in PATH. Using /sbin/modprobe'
+    MODPROBE=/sbin/modprobe
+fi
+
+# Switch to installroot and go!
+greenheader "+ Checking distro"
+DISTRO_CHECK=$(grep 'Ubuntu\|CentOS' /etc/*-release)
+if [ $? != 0 ]; then
+    redheader "! Unsupported distribution. Exiting."
+    exit
+else
+    echo -e   "  - Supported distro found. Continuing..."
+fi
+
+# Check if this file is run BEFORE setup
+if [ ! -e ".firewall-configured" ]; then
+    redheader "! Please run \"setup\" first"
+    exit
+else
+    # In case a 'git pull' happened
+    rm -f setup rules
+fi
+
+# This is the main script manifest; these are _required_ scripts
+REQUIREDSCRIPTS="
+10-firewall-definitions
+20-firewall-basic
+"
+
+# Check if the required scripts exist; exit otherwise
+for REQUIREDSCRIPT in $REQUIREDSCRIPTS; do
+    if [ ! -e $REQUIREDSCRIPT ]; then
+        redheader "Error: Missing $REQUIREDSCRIPT"
+        echo -e   "       You need the full manifest (below) to continue"
+        echo -e   "       The complete set may be obtained from:"
+        echo -e   "       git://git.eng.uiowa.edu/it.firewall"
+        echo "$REQUIREDSCRIPTS"
+        exit
+    fi
+done
+
+# Find and show the scripts to process
+FIREWALLSCRIPTS=$(find . -maxdepth 1 -name '*-firewall-*' -type f | grep -v swp | sort)
+greenheader "+ Will source the following scripts:"
+for FIREWALLSCRIPT in $FIREWALLSCRIPTS; do
+    echo -n "  - " 
+    basename $FIREWALLSCRIPT
+done
+
+# Now source each script
+for FIREWALLSCRIPT in $FIREWALLSCRIPTS; do
+    source $FIREWALLSCRIPT
+done
+
+# Finish up and restart service
+cyanheader "+ Finishing configuration"
+case "$DISTRO_CHECK" in
+    *CentOS*)
+        yellowheader "  RHEL/CentOS detected" 
+        echo -e      "  - Restarting iptables service"
+        echo -e      "    Wait for a few seconds if the script 'hangs'\n" 
+        $SERVICE iptables save    >> /dev/null
+        $SERVICE iptables restart >> /dev/null
+        rm -rf ./ubuntu-iptables-stop
+    ;;
+    *Ubuntu*)
+        yellowheader "  Debian/Ubuntu detected"
+        echo -n      "  - Saving rules and setting up iptables load and save scripts... "
+        ubuntu_iptables_scripts
+        iptables-save -c > /etc/network/iptables.rules
+        echo -e      " done"
+        echo -e      "  - Rules saved to /etc/network/iptables.rules\n"
+    ;;
+    *)
+        yellowheader "  Unknown platform..."
+        echo -e      "  Not sure what to tell you.\n"
+    ;;
+esac

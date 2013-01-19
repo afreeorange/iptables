@@ -1,0 +1,23 @@
+# --------- IPs ---------
+# Prefixed with "IP_"
+
+IP_BACKUP="a.b.c.d"
+
+
+
+# --------- BLOCKS ---------
+# Prefixed with "BLOCK_"
+
+BLOCK_TRUSTED="
+a.b.c.0/23
+"
+
+
+# --- GROUPS of BLOCKS ---
+# Prefixed with "GROUP_"
+
+GROUP_TRUSTED="
+a.b.c.0/24
+p.q.r.0/23
+x.y.0.0/16
+"
