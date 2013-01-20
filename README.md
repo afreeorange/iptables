@@ -27,7 +27,7 @@ For example, to open up ports 80 and 443 to a trusted groups, I'd edit `50-firew
 
 To add custom rules, do not edit the ones you check out from the repo. Your custom rules/definitions file should be named
 
- > **mn**-firewall-**foobar**
+ > **mn**-firewall-foobar
 
 where `m` and `n` are numbers, and "foobar" is anything you want.
 
