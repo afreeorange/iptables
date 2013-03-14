@@ -43,6 +43,7 @@ for PRIVATE_SUBNET in $GROUP_RFC1918; do
 done
 
 # ----------- ICMP Types ---------
+
 # Apropos connection states, there are only 4 ICMP type groups which are NEW or ESTABLISHED
 #   1. Echo Request          (type  8) and Reply (type  0) (ping and pong)
 #   2. Timestamp Request     (type 13) and Reply (type 14)
@@ -56,3 +57,13 @@ done
 echo -e "  - Allowing ICMP requests (out and in)"
 $IPTABLES -A INPUT  -p icmp -m state --state NEW -j ACCEPT
 $IPTABLES -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+# ----------- Explicitly Blocked IPs ---------
+
+echo -e "  - Blocking IPs"
+for BLOCKED_IP in $GROUP_DENY; do
+    echo -e "    $BLOCKED_IP"
+    $IPTABLES -A INPUT   -s $BLOCKED_IP -j DROP
+    $IPTABLES -A OUTPUT  -s $BLOCKED_IP -j DROP
+    $IPTABLES -A FORWARD -s $BLOCKED_IP -j DROP
+done

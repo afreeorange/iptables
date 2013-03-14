@@ -2,7 +2,7 @@
 
 # Nikhil Anand <nikhil@mantralay.org>
 # Mon Oct 31 10:58:06 CDT 2011
-# (c) Copyright, 2011-2020
+# (c) Copyright, 2011-2013
 
 # Colorized headers; unnecessary, but makes me happy
 function cyanheader()   { echo -e "\E[36m$1"; tput sgr0; }
@@ -73,7 +73,7 @@ for REQUIREDSCRIPT in $REQUIREDSCRIPTS; do
         redheader "Error: Missing $REQUIREDSCRIPT"
         echo -e   "       You need the full manifest (below) to continue"
         echo -e   "       The complete set may be obtained from:"
-        echo -e   "       git://git.eng.uiowa.edu/it.firewall"
+        echo -e   "       https://github.com/afreeorange/iptables"
         echo "$REQUIREDSCRIPTS"
         exit
     fi
