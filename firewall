@@ -10,6 +10,19 @@ function greenheader()  { echo -e "\E[32m$1"; tput sgr0; }
 function yellowheader() { echo -e "\E[33m$1"; tput sgr0; }
 function redheader()    { echo -e "\E[31m$1"; tput sgr0; }
 
+function _modprobe() {
+    MODULE=$1
+    $MODPROBE $MODULE &> /dev/null
+    if [ $? -ne 0 ]; then
+        yellowheader "    ! Could not load $MODULE. Possibly in kernel..."
+        if [ ! -f /proc/net/$MODULE ]; then
+            redheader   "      Couldn't find module :("
+        else
+            greenheader "      Found!"
+        fi
+    fi
+}
+
 # Set up load and save scripts for Ubuntu
 function ubuntu_iptables_scripts() {
 LOAD_SCRIPT="#!/bin/sh

@@ -21,8 +21,8 @@ $IPTABLES -A OUTPUT  -m state --state INVALID -j DROP
 $IPTABLES -A FORWARD -m state --state INVALID -j DROP
 
 echo -e "  - Loading connection tracking modules (not iptables_nat, ip_nat_ftp)"
-$MODPROBE ip_conntrack
-$MODPROBE ip_conntrack_ftp
+_modprobe ip_conntrack
+_modprobe ip_conntrack_ftp
 
 # ----------- BASIC RULES ---------
 
