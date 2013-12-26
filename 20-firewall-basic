@@ -20,6 +20,10 @@ $IPTABLES -A INPUT   -m state --state INVALID -j DROP
 $IPTABLES -A OUTPUT  -m state --state INVALID -j DROP
 $IPTABLES -A FORWARD -m state --state INVALID -j DROP
 
+echo -e "  - Bogus TCP packets"
+$IPTABLES -A INPUT -p tcp -m tcp --tcp-flags SYN,FIN SYN,FIN -j DROP
+$IPTABLES -A INPUT -p tcp -m tcp --tcp-flags SYN,RST SYN,RST -j DROP
+
 echo -e "  - Loading connection tracking modules (not iptables_nat, ip_nat_ftp)"
 _modprobe ip_conntrack
 _modprobe ip_conntrack_ftp
@@ -57,6 +61,9 @@ done
 echo -e "  - Allowing ICMP requests (out and in)"
 $IPTABLES -A INPUT  -p icmp -m state --state NEW -j ACCEPT
 $IPTABLES -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+echo -e "  - Rate-limiting ICMP connections"
+$IPTABLES -A INPUT  -p icmp -m icmp -m limit --limit 1/second -j ACCEPT 
 
 # ----------- Explicitly Blocked IPs ---------
 
