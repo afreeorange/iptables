@@ -37,4 +37,4 @@ This system allows you to keep your custom rules and continue to get the latest 
 
 ## License
 
-MIT. Copyright 2013 Nikhil Anand `<nikhil@mantralay.org>`
+MIT
