@@ -63,7 +63,7 @@ $IPTABLES -A INPUT  -p icmp -m state --state NEW -j ACCEPT
 $IPTABLES -A OUTPUT -p icmp -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
 
 echo -e "  - Rate-limiting ICMP connections"
-$IPTABLES -A INPUT  -p icmp -m icmp -m limit --limit 1/second -j ACCEPT 
+$IPTABLES -A INPUT  -p icmp -m icmp --icmp-type echo-request -m limit --limit 1/second -j ACCEPT
 
 # ----------- Explicitly Blocked IPs ---------
 
